@@ -1,0 +1,16 @@
+meta {
+  name: seed
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:4010/api/seed
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

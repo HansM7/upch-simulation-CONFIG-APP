@@ -1,0 +1,28 @@
+meta {
+  name: assign student fantoma
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:4000/api/v1/stomatology/equipments/fantomas/assign-student
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "alumno_id":1,
+    "equipo_id":1
+  }
+}
+
+body:multipart-form {
+  file: @file(C:\Users\HANS\Downloads\formato-carga-estudiantes-fantomas.xlsx)
+  ciclo_academico: 2025-II
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
