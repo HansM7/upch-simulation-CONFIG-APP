@@ -43,18 +43,32 @@ app.get('/api/projects', (req, res) => {
 
 app.post('/api/start', (req, res) => {
   const { name } = req.body;
-  const projectPath = path.join(__dirname, name);
+  const projectPath = path.join(rootPath, name);
+
+  // Determinar el path del archivo principal: dist/src/main.js o dist/main.js
+  // Reglas específicas por proyecto:
+  // - Si el proyecto es 'upch-simulation-CONFIG-APP' => dist/src/main.js
+  // - Si el proyecto es 'upch-simulation-AUTH-MS' => dist/main.js
+  // - El resto: por defecto usar dist/src/main.js, pero podrías ajustar más reglas aquí si tienes más casos
+
+  let scriptFile = 'dist/src/main.js';
+  if (name === 'upch-simulation-CLIENT-GATEWAY') {
+    scriptFile = 'dist/main.js';
+  }
+  // Si quieres agregar reglas para otros, puedes expandir el if
 
   pm2.connect((err) => {
     if (err) return res.status(500).json({ error: err });
 
     pm2.start({
+      script: scriptFile,
       name: name,
-      script: 'npm',
-      args: ['run', 'start:dev'],
       cwd: projectPath,
       autorestart: false
     }, (err) => {
+
+      console.log(err)
+
       if (err) return res.status(500).json({ error: err });
       res.json({ message: `${name} iniciado correctamente` });
     });
