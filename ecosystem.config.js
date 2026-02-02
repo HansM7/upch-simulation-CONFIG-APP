@@ -45,6 +45,17 @@ module.exports = {
       },
     },
     {
+      name: "report-service",
+      script: "cmd.exe",
+      args: "/c npm run start:dev",
+      cwd: "../upch-simulation-REPORT-MS",
+      windowsHide: true,
+      env: {
+        PORT: 4040,
+        NODE_ENV: "development",
+      },
+    },
+    {
       name: "stomatology-websocket",
       script: "cmd.exe",
       args: "/c npm run start:dev",

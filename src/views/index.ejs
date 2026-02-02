@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestor de Microservicios</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-3xl mx-auto py-10 px-4">
+        <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">Aplicaciones locales</h1>
+        <div class="mb-6 p-4 bg-white rounded-lg shadow border-l-4 border-blue-500 flex flex-col sm:flex-row gap-3 items-end">
+          <div class="flex-1 w-full">
+              <label class="text-xs font-bold text-gray-500 uppercase">Mensaje de Commit Global</label>
+              <input type="text" id="git-message" placeholder="feat: valid changes" 
+                     class="w-full mt-1 px-3 py-2 bg-gray-50 border rounded-md text-sm focus:ring-2 focus:ring-blue-400 outline-none">
+          </div>
+          <button onclick="pushAllChanges()" id="btn-push"
+                  class="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-md text-sm font-bold hover:bg-blue-700 transition flex items-center justify-center gap-2">
+              <span>🚀 Subir todo</span>
+          </button>
+      </div>
+        <ul id="project-list" class="divide-y divide-gray-200 bg-white rounded-lg shadow"></ul>
+    </div>
+
+    <script>
+
+async function pushAllChanges() {
+            const btn = document.getElementById('btn-push');
+            const message = document.getElementById('git-message').value;
+            
+            if(!confirm('¿Estás seguro de subir cambios en todos los repositorios?')) return;
+
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            btn.innerText = 'Subiendo...';
+
+            try {
+                const res = await fetch('/api/git-push', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+                const data = await res.json();
+                alert(data.message);
+            } catch (err) {
+                alert('Error al ejecutar el script de Git');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.innerText = '🚀 Subir todo';
+            }
+        }
+
+        function statusStyles(status) {
+            switch(status) {
+                case 'online':   return 'bg-green-100 text-green-700 border-green-500';
+                case 'stopped':  return 'bg-red-100 text-red-700 border-red-400';
+                case 'errored':  return 'bg-yellow-100 text-yellow-700 border-yellow-400';
+                default:         return 'bg-gray-100 text-gray-700 border-gray-300';
+            }
+        }
+
+        async function loadProjects() {
+            const res = await fetch('/api/projects');
+            const projects = await res.json();
+            const container = document.getElementById('project-list');
+            container.innerHTML = projects.map(p => `
+                <li class="flex items-center justify-between gap-3 py-4 px-4 hover:bg-gray-50 transition group">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span class="text-lg font-medium text-gray-700 min-w-[400px]">${p.name}</span>
+                            <span class="ml-0 sm:ml-4 inline-block text-xs rounded px-2 py-1 border ${statusStyles(p.status)}">
+                                ${p.status.toUpperCase()}
+                            </span>
+                        </div>
+                        <div class="text-xs mt-2 text-gray-500">RAM: <span class="font-semibold">${p.memory}MB</span> | CPU: <span class="font-semibold">${p.cpu}%</span></div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-1 rounded bg-green-600 text-white text-sm font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300 transition disabled:bg-green-300"
+                                onclick="control('${p.name}', 'start')" ${p.status === 'online' ? 'disabled' : ''}>
+                            Levantar
+                        </button>
+                        <button class="px-3 py-1 rounded bg-red-600 text-white text-sm font-medium hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 transition disabled:bg-red-300"
+                                onclick="control('${p.name}', 'stop')" ${p.status !== 'online' ? 'disabled' : ''}>
+                            Detener
+                        </button>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        async function control(name, action) {
+            await fetch(`/api/${action}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            });
+            loadProjects(); // Recargar estados
+        }
+
+        setInterval(loadProjects, 3000); // Auto-refresco cada 3 segundos
+        loadProjects();
+    </script>
+</body>
+</html>

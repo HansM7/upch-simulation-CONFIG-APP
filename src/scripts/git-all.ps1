@@ -6,7 +6,7 @@
 $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 # Subir un nivel (workspace)
-$workspacePath = Resolve-Path "$scriptPath\.."
+$workspacePath = Resolve-Path "$scriptPath\..\..\.."
 
 Get-ChildItem -Path $workspacePath -Directory | ForEach-Object {
     # Ignorar la carpeta config-app
